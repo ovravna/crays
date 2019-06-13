@@ -150,6 +150,33 @@ src/main.c.s:
 	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/main.c.s
 .PHONY : src/main.c.s
 
+src/rays.o: src/rays.c.o
+
+.PHONY : src/rays.o
+
+# target to build an object file
+src/rays.c.o:
+	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/rays.c.o
+.PHONY : src/rays.c.o
+
+src/rays.i: src/rays.c.i
+
+.PHONY : src/rays.i
+
+# target to preprocess a source file
+src/rays.c.i:
+	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/rays.c.i
+.PHONY : src/rays.c.i
+
+src/rays.s: src/rays.c.s
+
+.PHONY : src/rays.s
+
+# target to generate assembly for a file
+src/rays.c.s:
+	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/rays.c.s
+.PHONY : src/rays.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -162,6 +189,9 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/rays.o"
+	@echo "... src/rays.i"
+	@echo "... src/rays.s"
 .PHONY : help
 
 
