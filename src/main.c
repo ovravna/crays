@@ -21,6 +21,7 @@ int main(int argc, char** argv) {
 
 	uint32_t pixels[SCREEN_SIZE];
 	memset(pixels, 255, screen_size);
+	setup(pixels);
  	while (!quit) {
 		SDL_UpdateTexture(texture, NULL, pixels, WIDHT * sizeof(uint32_t));
 		
