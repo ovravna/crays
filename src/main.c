@@ -20,18 +20,20 @@ int main(int argc, char** argv) {
 			renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, WIDHT, HEIGHT);
 
 	uint32_t pixels[SCREEN_SIZE];
-	memset(pixels, 255, screen_size);
+	uint32_t bg_color = 255;
+	memset(pixels, bg_color, screen_size);
 	setup(pixels);
  	while (!quit) {
+		memset(pixels, bg_color, screen_size);
+		loop(pixels);		
 		SDL_UpdateTexture(texture, NULL, pixels, WIDHT * sizeof(uint32_t));
 		
-		SDL_WaitEvent(&event);
+		SDL_PollEvent(&event);
 		switch (event.type) {
 			case SDL_QUIT:
 				quit = true;
 				break;
 		}
-		draw(pixels);		
 		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
