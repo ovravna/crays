@@ -123,6 +123,33 @@ crays/fast:
 	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/build
 .PHONY : crays/fast
 
+src/lines.o: src/lines.c.o
+
+.PHONY : src/lines.o
+
+# target to build an object file
+src/lines.c.o:
+	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/lines.c.o
+.PHONY : src/lines.c.o
+
+src/lines.i: src/lines.c.i
+
+.PHONY : src/lines.i
+
+# target to preprocess a source file
+src/lines.c.i:
+	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/lines.c.i
+.PHONY : src/lines.c.i
+
+src/lines.s: src/lines.c.s
+
+.PHONY : src/lines.s
+
+# target to generate assembly for a file
+src/lines.c.s:
+	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/lines.c.s
+.PHONY : src/lines.c.s
+
 src/main.o: src/main.c.o
 
 .PHONY : src/main.o
@@ -186,6 +213,9 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... crays"
 	@echo "... edit_cache"
+	@echo "... src/lines.o"
+	@echo "... src/lines.i"
+	@echo "... src/lines.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
