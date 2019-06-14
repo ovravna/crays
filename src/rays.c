@@ -35,10 +35,10 @@ void loop(uint32_t * pixels) {
 	double yd = sin(ticks/4000) * B_HEIGHT / 5 +  B_HEIGHT / 2;
 	player.x = (uint32_t) xd;
 	player.y = (uint32_t) yd;
-	cast_rays(pixels, player, stage, 90.0);
+	cast_rays(pixels, player, stage, M_PI/2);
 	stage[player.y * B_WIDHT + player.x] = 2;
 	draw_stage(pixels, stage);
-	/* printf("%f %f %f\n", ticks, xd, yd); */
+	/* printf("%d %d\n", player.x, player.y); */
 	ticks++;
 }
 
@@ -47,17 +47,26 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 	double delta_a = fov / 20;
 	for (double angle = player.a - fov/2; angle < fov / 2; angle += delta_a)  {
 		bool hit = false;
-		double hx = cos(player.a); 
-		double hy = sin(player.a);
-		uint32_t n = 0;
-		while (!hit) {
+		double hx = cos(angle); 
+		double hy = sin(angle);
+		uint32_t n = 1;
+		/* printf("Hit stuff: %f %f\n", hx, hy); */
+		for (uint32_t i = 0; i < 10 && !hit; i++, n++) {
 			uint32_t nx = player.x + n * hx;
 			uint32_t ny = player.y + n * hy; 
 			if (stage[ny * B_WIDHT + nx] != 0) {
 				hit = true;
-				draw_line(pixels, player.x, player.y, nx, ny);
+				/* draw_line(pixels, player.x, player.y, nx, ny); */
+				stage[ny * B_WIDHT + nx] = 2;
+				printf("Hit stuff: %d %d\n", nx, ny);
 				break;
 			}
+			if (ny >= B_HEIGHT || nx >= B_WIDHT || ny == 0 || nx == 0) {
+				hit = true;
+				printf("Hit wall: %d %d\n", nx, ny);
+				break;
+			}
+			/* printf("None: %d %d\n", nx, ny); */
 		}
 	}
 	return 0;
@@ -101,8 +110,11 @@ int draw_player(uint32_t* pixels, uint32_t x_block, uint32_t y_block) {
 
 void draw_line(uint32_t * pixels,  uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1) {
 	uint32_t lenght = sqrt( pow(x1 - x0, 2) + pow(y1 - y0, 2) );
+	double a = (y1 - y0)/(x1 - x0);
 	for (uint32_t x = x0; x < x1; x++) {
-		pixels[
+		pixels[ (uint32_t) (a * x + y0) ] = 0;
+		pixels[ (uint32_t) (a * x + y0 - 1) ] = 0;
+		pixels[ (uint32_t) (a * x + y0 + 1) ] = 0;
 		// TODO: fix 
 	}
 } 
