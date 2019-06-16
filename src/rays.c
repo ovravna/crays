@@ -60,12 +60,12 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 			ny = player.y + n * hy; 
 			if (stage[ny * B_WIDHT + nx] != 0) {
 				hit = true;
-				draw_line_shitty(
+				draw_line(
 					pixels,
-					player.x*BLOCK + BLOCK/2,
-					player.y*BLOCK + BLOCK/2,
-					nx*BLOCK + BLOCK/2,
-					ny*BLOCK + BLOCK/2,
+					player.x*BLOCK + BLOCK / 2,
+					player.y*BLOCK + BLOCK / 2,
+					nx*BLOCK + BLOCK / 2,
+					ny*BLOCK + BLOCK /2,
 					0
 					);
 				/* stage[ny * B_WIDHT + nx] = 2; */
@@ -77,6 +77,7 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 				printf("Hit wall: %d %d\n", nx, ny);
 				break;
 			}
+			/* stage[ny * B_WIDHT + nx] = 3; */
 			/* printf("None: %d %d\n", nx, ny); */
 		}
 		hit = false;
@@ -91,10 +92,13 @@ int draw_stage(uint32_t* pixels, uint32_t* stage) {
 				case 0:
 					break;
 				case 1:
-					draw_block(pixels, x, y); 
+					draw_block(pixels, x, y, 0xff0000, 0); 
 					break;
 				case 2:
 					draw_player(pixels, x, y);
+					break;
+				case 3:
+					draw_block(pixels, x, y, 0xffff00, 0xffff00);
 					break;
 			}
 		}
@@ -209,16 +213,16 @@ void draw_line_shitty(uint32_t * pixels,  int x0, int y0, int x1, int y1, uint32
 	}
 } 
 
-int draw_block(uint32_t* pixels, uint32_t x_block, uint32_t y_block) {
-	uint32_t color;
+int draw_block(uint32_t* pixels, uint32_t x_block, uint32_t y_block, uint32_t color, uint32_t bg_color) {
+	
 	for (uint32_t y = 0; y < BLOCK;y++) {
 		for (uint32_t x = 0; x < BLOCK;x++) {
-			color = 0xff0000;
+			uint32_t c = color;
 			if (y == 0 || y == BLOCK - 1 || x == 0 || x == BLOCK - 0) {
-				color = 0x0;	
+				c = bg_color;	
 			}
 			
-			pixels[(y_block*BLOCK + y)*WIDHT + x_block*BLOCK + x] = color;
+			pixels[(y_block*BLOCK + y)*WIDHT + x_block*BLOCK + x] = c;
 		}
 	}
 	return 0;  

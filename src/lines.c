@@ -24,7 +24,7 @@ void draw_line(uint32_t * pixels, int x0, int y0, int x1, int y1, uint32_t color
 void draw_line_low(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t color){
 	int dx = x1 - x0;
 	int dy = y1 - y0; 
-	int yi = y0;
+	int yi = 1;
 	if (dy < 0) {
 		yi = -1;
 		dy = -dy;

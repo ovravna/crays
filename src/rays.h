@@ -20,7 +20,7 @@ typedef struct {
 
 void setup(uint32_t * pixels);
 void loop(uint32_t * pixels);
-int draw_block(uint32_t * pixels, uint32_t x_block, uint32_t y_block);
+int draw_block(uint32_t * pixels, uint32_t x_block, uint32_t y_block, uint32_t color, uint32_t bg_color);
 int draw_stage(uint32_t* pixels, uint32_t* stage);
 int draw_player(uint32_t* pixels, uint32_t x_block, uint32_t y_block);
 int create_stage(uint32_t * pixels, uint32_t * stage);
