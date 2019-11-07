@@ -1,9 +1,12 @@
 #include "rays.h"
 #include "lines.h"
- 
+#include "utils.h" 
+
 uint32_t stage[B_WIDHT * B_HEIGHT];
 player_t player;
 double ticks = 0; 
+enum piece { Empty, Wall, Player, Foe};
+
 int create_stage(uint32_t * pixels, uint32_t * stage) { /* if (stage != NULL) return 0; */
 	
 	/* stage = melloc(B_WIDHT * B_HEIGHT * sizeof(uint32_t)); */
@@ -11,11 +14,11 @@ int create_stage(uint32_t * pixels, uint32_t * stage) { /* if (stage != NULL) re
 	for (uint32_t y = 0; y < B_HEIGHT; y++) {
 		for (uint32_t x = 0; x < B_WIDHT; x++) {
 			if (x == 0 || x == B_WIDHT - 1 || y == 0 || y == B_HEIGHT - 1)
-				stage[y * B_WIDHT + x] = 1;
+				stage[y * B_WIDHT + x] = Wall;
 			else if ((y == 4 && x > 0 && x < 6) || (y == 12 && x < B_WIDHT && x > B_WIDHT - 8)) 
-				stage[y * B_WIDHT + x] = 1;
+				stage[y * B_WIDHT + x] = Wall;
 			else 
-				stage[y * B_WIDHT + x] = 0;
+				stage[y * B_WIDHT + x] = Empty;
 		}
 	}
 	
@@ -31,11 +34,11 @@ void setup(uint32_t * pixels) {
 }
 void loop(uint32_t * pixels) {
 	create_stage(pixels, stage);
-	double xd = cos(ticks/4000) * B_WIDHT / 5 + B_WIDHT / 2;
-	double yd = sin(ticks/4000) * B_HEIGHT / 5 +  B_HEIGHT / 2;
-	player.a += 0.001;
-	player.x = (uint32_t) xd;
-	player.y = (uint32_t) yd;
+	/* double xd = cos(ticks/4000) * B_WIDHT / 5 + B_WIDHT / 2; */
+	/* double yd = sin(ticks/4000) * B_HEIGHT / 5 +  B_HEIGHT / 2; */
+	player.a += M_PI / 2 * 0.001;
+	/* player.x = (uint32_t) xd; */
+	/* player.y = (uint32_t) yd; */
 	cast_rays(pixels, player, stage, M_PI/2);
 	stage[player.y * B_WIDHT + player.x] = 2;
 	draw_stage(pixels, stage);
@@ -44,22 +47,66 @@ void loop(uint32_t * pixels) {
 }
 
 
-void draw_line_shitty(uint32_t * pixels,  int x0, int y0, int x1, int y1, uint32_t color);
+int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t col); 
+
+int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t color, uint32_t w, uint32_t i) {
+    	/* for (uint32_t yy = 0; yy < HEIGHT; yy++) { */
+	    /* for (uint32_t xx = 0; xx < WIDHT; xx++) { */
+		/* pixels[yy * WIDHT + xx] = yy * WIDHT + xx; // map(yy * WIDHT + xx, 0, HEIGHT * WIDHT, 0, 0xffffff); */
+	    /* } */
+	/* } */
+	
+	int32_t dx = x1 - x0,
+		 dy = y1 - y0;
+	//source at https://youtu.be/eOCQfxRQ2pY?t=781
+    	double dist = dx * cos(player.a) + dy * sin(player.a);
+
+	/* double dist = sqrt(dx * dx + dy * dy); */
+	//todo map dist to height
+	int h =	  map(dist, 0, WIDHT, HEIGHT, 0);
+	int col = map(dist, 0, WIDHT, 0, 0xffffff);
+	int bw = to_bw(col);
+	printf("%f %d %x %x\n",dist, WIDHT, col, bw);
+	//todo map dist to color
+	//todo draw rects
+	
+	draw_rect_ycenter(pixels, i * w, HEIGHT / 2, w, h, bw);
+	
+
+	return 0;
+}
+
+int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t col) {
+	
+    	uint32_t h2 = h / 2;
+
+	for (size_t yy = y - h2; yy < y + h2; yy++) {
+	    for (size_t xx = x; xx < x + w; xx++) {
+		pixels[yy * WIDHT + xx] = col;
+	
+	    }
+    
+	}
+    
+	return 0;
+}
+
 
 int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) {
-	double delta_a = fov / 20;
-	for (double angle = player.a - fov/2; angle < player.a + fov / 2; angle += delta_a)  {
-		bool hit = false;
+    	uint32_t n_lines = 100;
+	double delta_a = fov / n_lines;
+	uint32_t i = 0;
+	for (double angle = player.a - fov/2; angle <= player.a + fov / 2; angle += delta_a, i++)  {
 		double hx = cos(angle); 
 		double hy = sin(angle);
 		uint32_t nx; 
 		uint32_t ny; 
-		/* printf("Hit stuff: %f %f\n", hx, hy); */
-		for (uint32_t n = 1; !hit; n++) {
+
+		for (uint32_t n = 1 ;; n++) {
 			nx = player.x + n * hx;
 			ny = player.y + n * hy; 
 			if (stage[ny * B_WIDHT + nx] != 0) {
-				hit = true;
+
 				draw_line(
 					pixels,
 					player.x*BLOCK + BLOCK / 2,
@@ -68,36 +115,44 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 					ny*BLOCK + BLOCK /2,
 					0
 					);
-				/* stage[ny * B_WIDHT + nx] = 2; */
-				/* printf("Hit stuff: %d %d\n", nx, ny); */
+
+				casted_line(   // todo: drawing should definetly not happen here...
+					&pixels[WIDHT * HEIGHT],
+					player.x*BLOCK + BLOCK / 2,
+					player.y*BLOCK + BLOCK / 2,
+					nx*BLOCK + BLOCK / 2,
+					ny*BLOCK + BLOCK /2,
+					0xff00f0,
+					WIDHT / n_lines,
+					i	
+					);			/* stage[ny * B_WIDHT + nx] = 2; */
 				break;
 			}
 			if (ny >= B_HEIGHT || nx >= B_WIDHT || ny == 0 || nx == 0) {
-				hit = true;
 				printf("Hit wall: %d %d\n", nx, ny);
 				break;
 			}
-			/* stage[ny * B_WIDHT + nx] = 3; */
-			/* printf("None: %d %d\n", nx, ny); */
 		}
-		hit = false;
 	}
 	return 0;
 }
+
+/* int cast_ray(); */
+
 
 int draw_stage(uint32_t* pixels, uint32_t* stage) {
 	for (uint32_t y = 0; y < B_HEIGHT; y++) {
 		for (uint32_t x = 0; x < B_WIDHT; x++) {
 			switch (stage[y*B_WIDHT + x]) {
-				case 0:
+				case Empty:
 					break;
-				case 1:
+				case Wall:
 					draw_block(pixels, x, y, 0xff0000, 0); 
 					break;
-				case 2:
+				case Player:
 					draw_player(pixels, x, y);
 					break;
-				case 3:
+				case Foe:
 					draw_block(pixels, x, y, 0xffff00, 0xffff00);
 					break;
 			}
@@ -124,94 +179,6 @@ int draw_player(uint32_t* pixels, uint32_t x_block, uint32_t y_block) {
 	return 0;  
 }
 
-void draw_line4(uint32_t * pixels,  int x0, int y0, int x1, int y1) {
-	double dx = x1 - x0;
-	double dy = y1 - y0;
-	double D = 2*dy -dx;
-	if (dx == 0 || dy == 0) return; 
-	int y = y0;
-	int signx = dx < 0 ? -1 : 1;
-	int signy = dy < 0 ? -1 : 1;
-	for (uint32_t x = x0; x != x1; x += signx) {
-		pixels[y * WIDHT + x] = 0;
-		if (D > 0) {
-			y += signy;
-			D -= 2*dx;
-		}
-		D += 2*dy;
-	}
-
-}
-void draw_line3(uint32_t * pixels,  int x0, int y0, int x1, int y1) {
-	uint32_t color = 0;
-	/* if (x0 > x1) { */
-	/* 	int xtmp = x1; */
-	/* 	x1 = x0; */ 
-	/* 	x0 = xtmp; */
-	/* } */
-	
-	/* if (y0 > y1) { */
-	/* 	int ytmp = y1; */
-	/* 	y1 = y0; */ 
-	/* 	y0 = ytmp; */
-	/* } */
-	double deltax = x1 - x0;
-	double deltay = y1 - y0;
-
-	int signx = deltax < 0 ? -1 : 1;
-	int signy = deltay < 0 ? -1 : 1;
-
-	if (deltax == 0) {
-		for (uint32_t y = y0; y != y1; y += signy) {
-			pixels[y * WIDHT + x0] = color;
-		}
-		return;
-	}
-	double deltaerr = fabs(deltay/deltax);
-	double err = 0;
-	uint32_t y = y0;
-	for (uint32_t x = x0; x != x1; x += signx) {
-
-		pixels[y * WIDHT + x] = 0;
-		err += deltaerr;
-		if (err >= 0.5) {
-			y += signy;
-			err -= 1.0;
-		}
-	}
-	
-
-}
-void draw_line_shitty(uint32_t * pixels,  int x0, int y0, int x1, int y1, uint32_t color) {
-	/* uint32_t lenght = sqrt( pow(x1 - x0, 2) + pow(y1 - y0, 2) ); */
-	double step = 40;
-
-	if (x1 - x0 == 0) {
-		double dy = (y1 - y0) / step;
-		if (x1 - x0 == 0) {
-
-			for (uint32_t y = y0, n = 0; n < step; y += dy, n++) {
-
-				if (y < 0 || y >= HEIGHT || x0 < 0 || x0 >= WIDHT) {
-					/* printf("Outside %d %d\n", x, y); */
-				} else { 
-					pixels[y * WIDHT + x0] = color;
-				}
-			}
-		}
-		return;
-	}
-	double a = (1.0*y1 - y0)/(x1 - x0);
-	double dx = (x1 - x0) / step; 
-	for (int x = x0, n = 0; n < step; n++, x += dx) {
-		uint32_t y =  (a * (x - x0) + y0);
-		if (y < 0 || y >= HEIGHT || x < 0 || x >= WIDHT) {
-			/* printf("Outside %d %d\n", x, y); */
-		} else { 
-			pixels[y * WIDHT + x] = color;
-		}
-	}
-} 
 
 int draw_block(uint32_t* pixels, uint32_t x_block, uint32_t y_block, uint32_t color, uint32_t bg_color) {
 	

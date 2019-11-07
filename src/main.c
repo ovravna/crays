@@ -12,12 +12,12 @@ int main(int argc, char** argv) {
 	SDL_Init(SDL_INIT_VIDEO);
 
 	SDL_Window * window = SDL_CreateWindow(
-			"My Window!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDHT, HEIGHT, 0);
+			"CRAYS", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDHT, SCREEN_HEIGHT, 0);
 	
 	SDL_Renderer * renderer = SDL_CreateRenderer(window, -1, 0);
 
 	SDL_Texture * texture = SDL_CreateTexture(
-			renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, WIDHT, HEIGHT);
+			renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, SCREEN_WIDHT, SCREEN_HEIGHT);
 
 	uint32_t pixels[SCREEN_SIZE];
 	uint32_t bg_color = 255;
