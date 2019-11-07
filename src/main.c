@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include "SDL2/SDL.h"
 #include "rays.h"
+#include "inputs.h"
+
 int main(int argc, char** argv) {
 	
 	bool leftMouseButtonDown = false;
@@ -33,6 +35,24 @@ int main(int argc, char** argv) {
 			case SDL_QUIT:
 				quit = true;
 				break;
+			case SDL_KEYDOWN:
+				/* printf("%d\n", event.key.keysym.sym); */
+				switch (event.key.keysym.sym) {
+				    case SDLK_UP: 
+					keypress(Up);
+					break;
+				    case SDLK_DOWN: 
+					keypress(Down);
+					break;
+				    case SDLK_RIGHT: 
+					keypress(Right);
+					break;
+				    case SDLK_LEFT: 
+					keypress(Left);
+					break;
+				break;
+				}
+
 		}
 		SDL_RenderClear(renderer);
 		SDL_RenderCopy(renderer, texture, NULL, NULL);

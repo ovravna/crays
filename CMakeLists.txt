@@ -14,6 +14,7 @@ add_executable(
 	src/main.c
 	src/rays.c
 	src/lines.c
+	src/inputs.c
 )
 set_property(TARGET crays PROPERTY C_STANDARD 99)
 target_link_libraries(crays -lm SDL2)

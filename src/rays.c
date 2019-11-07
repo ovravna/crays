@@ -1,6 +1,7 @@
 #include "rays.h"
 #include "lines.h"
 #include "utils.h" 
+#include "inputs.h" 
 
 uint32_t stage[B_WIDHT * B_HEIGHT];
 player_t player;
@@ -10,6 +11,9 @@ enum piece { Empty, Wall, Player, Foe};
 typedef struct s {
 	uint32_t x0, y0, x1, y1;
 } ray;
+
+
+
 
 size_t n_rays = 100;
 ray rays[100];
@@ -40,7 +44,7 @@ void setup(uint32_t * pixels) {
 	create_stage(pixels, stage);
 }
 
-int draw_player2(uint32_t * pixels, player_t player) {
+int draw_player(uint32_t * pixels, player_t player) {
 	uint32_t r = BLOCK / 2;		
    		
 	int cx, cy;
@@ -56,18 +60,55 @@ int draw_player2(uint32_t * pixels, player_t player) {
 	return 0;
 }
 
+void player_movement() {
+	int key = get_keypress();
+	double movement_lenght = 2.0;
+	double turn_lenght = 0.05;
+	double movex, movey;
+	
+	movey = movement_lenght * sin(player.a);
+	movex = movement_lenght * cos(player.a);
+
+	switch (key) {
+
+	    case Up:
+		player.y += movey;
+		player.x += movex;
+		break;
+	    case Down:
+		player.y -= movey;
+		player.x -= movex;
+		
+		break;
+	    case Right:
+		player.a += turn_lenght;
+		break;
+	    case Left:
+		player.a -= turn_lenght;
+		break;
+	}
+}
+
 void loop(uint32_t * pixels) {
     	
+    	/* int arrow = get_arrow_press(); */
+	/* char c = fgetc(stdin); */
+	/* if ((c != EOF) && (c != '\n')) fflushstdin (); */
+    	/* printf("%c\n", c); */
+	/* printf("%d\n", arrow); */
+    	/* int c = get_keypress(); */ 
+	/* printf("%d\n", c); */
 	create_stage(pixels, stage);
-	double xd = cos(ticks/1000) * WIDHT / 3 + WIDHT / 2;
-	double yd = sin(ticks/1000) * HEIGHT / 3 + HEIGHT / 2;
-	player.a += M_PI / 2 * 0.001;
-	player.x = (uint32_t) xd;
-	player.y = (uint32_t) yd;
+	player_movement();
+	/* double xd = cos(ticks/1000) * WIDHT / 3 + WIDHT / 2; */
+	/* double yd = sin(ticks/1000) * HEIGHT / 3 + HEIGHT / 2; */
+	/* player.a += M_PI / 2 * 0.001; */
+	/* player.x = (uint32_t) xd; */
+	/* player.y = (uint32_t) yd; */
 	cast_rays(pixels, player, stage, M_PI/2);
 	/* stage[player.y * B_WIDHT + player.x] = 1; */
 	draw_stage(pixels, stage);
-	draw_player2(pixels, player);
+	draw_player(pixels, player);
 	/* printf("%d %d\n", player.x, player.y); */
 	ticks++;
 }
@@ -86,14 +127,10 @@ int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32
 	//source at https://youtu.be/eOCQfxRQ2pY?t=781
     	double dist = dx * cos(player.a) + dy * sin(player.a);
 
-	/* double dist = sqrt(dx * dx + dy * dy); */
-	//todo map dist to height
 	int h =	  map(dist, 0, WIDHT, HEIGHT, 0);
 	int col = map(dist * dist, 0, WIDHT * WIDHT, 0xff, 0);
 	int bw = to_bw(col);
 	/* printf("%f %d %x %x\n",dist, WIDHT, col, bw); */
-	//todo map dist to color
-	//todo draw rects
 	
 	draw_rect_ycenter(pixels, i * w, HEIGHT / 2, w, h, col << 16);
 	
@@ -116,6 +153,7 @@ int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uin
 
 int cast_rays2(uint32_t * pixels, player_t player, uint32_t * stage, double fov) {
 
+    return 0;
 }
 
 int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) {
@@ -184,7 +222,6 @@ int draw_stage(uint32_t* pixels, uint32_t* stage) {
 					break;
 				case Player:
 					/* draw_block(pixels, x, y, 0xffffff, 0xffffff); */
-					draw_player(pixels, x, y);
 					break;
 				case Foe:
 					draw_block(pixels, x, y, 0xffff00, 0xffff00);
@@ -194,25 +231,6 @@ int draw_stage(uint32_t* pixels, uint32_t* stage) {
 	}
 	return 0;
 }
-int draw_player(uint32_t* pixels, uint32_t x_block, uint32_t y_block) {
-
-	uint32_t color, edge_color, cx, cy;
-	for (uint32_t y = 0; y < BLOCK;y++) {
-		for (uint32_t x = 0; x < BLOCK;x++) {
-			edge_color = 0xffa500;
-			color = 0x005aff;
-			cx = x - BLOCK / 2;
-			cy = y - BLOCK / 2;
-			double r = sqrt(cx*cx + cy*cy);
-			if (r < BLOCK/2)
-				pixels[(y_block*BLOCK + y)*WIDHT + x_block*BLOCK + x] = edge_color;
-			if (r < BLOCK / 2 - 2)
-				pixels[(y_block*BLOCK + y)*WIDHT + x_block*BLOCK + x] = color;
-		}
-	}
-	return 0;  
-}
-
 
 int draw_block(uint32_t* pixels, uint32_t x_block, uint32_t y_block, uint32_t color, uint32_t bg_color) {
 	
