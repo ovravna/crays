@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
 			renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STATIC, SCREEN_WIDHT, SCREEN_HEIGHT);
 
 	uint32_t pixels[SCREEN_SIZE];
-	uint32_t bg_color = 255;
+	uint32_t bg_color = 0xff;
 	memset(pixels, bg_color, screen_size);
 	setup(pixels);
  	while (!quit) {

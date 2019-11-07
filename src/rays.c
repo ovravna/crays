@@ -7,6 +7,13 @@ player_t player;
 double ticks = 0; 
 enum piece { Empty, Wall, Player, Foe};
 
+typedef struct s {
+	uint32_t x0, y0, x1, y1;
+} ray;
+
+size_t n_rays = 100;
+ray rays[100];
+
 int create_stage(uint32_t * pixels, uint32_t * stage) { /* if (stage != NULL) return 0; */
 	
 	/* stage = melloc(B_WIDHT * B_HEIGHT * sizeof(uint32_t)); */
@@ -49,13 +56,12 @@ void loop(uint32_t * pixels) {
 
 int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t col); 
 
-int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t color, uint32_t w, uint32_t i) {
+int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t w, uint32_t i) {
     	/* for (uint32_t yy = 0; yy < HEIGHT; yy++) { */
 	    /* for (uint32_t xx = 0; xx < WIDHT; xx++) { */
-		/* pixels[yy * WIDHT + xx] = yy * WIDHT + xx; // map(yy * WIDHT + xx, 0, HEIGHT * WIDHT, 0, 0xffffff); */
+		/* pixels[yy * WIDHT + xx] = 0; // map(yy * WIDHT + xx, 0, HEIGHT * WIDHT, 0, 0xffffff); */
 	    /* } */
 	/* } */
-	
 	int32_t dx = x1 - x0,
 		 dy = y1 - y0;
 	//source at https://youtu.be/eOCQfxRQ2pY?t=781
@@ -64,13 +70,13 @@ int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32
 	/* double dist = sqrt(dx * dx + dy * dy); */
 	//todo map dist to height
 	int h =	  map(dist, 0, WIDHT, HEIGHT, 0);
-	int col = map(dist, 0, WIDHT, 0, 0xffffff);
+	int col = map(dist * dist, 0, WIDHT * WIDHT, 0xff, 0);
 	int bw = to_bw(col);
-	printf("%f %d %x %x\n",dist, WIDHT, col, bw);
+	/* printf("%f %d %x %x\n",dist, WIDHT, col, bw); */
 	//todo map dist to color
 	//todo draw rects
 	
-	draw_rect_ycenter(pixels, i * w, HEIGHT / 2, w, h, bw);
+	draw_rect_ycenter(pixels, i * w, HEIGHT / 2, w, h, col << 16);
 	
 
 	return 0;
@@ -83,9 +89,7 @@ int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uin
 	for (size_t yy = y - h2; yy < y + h2; yy++) {
 	    for (size_t xx = x; xx < x + w; xx++) {
 		pixels[yy * WIDHT + xx] = col;
-	
 	    }
-    
 	}
     
 	return 0;
@@ -106,6 +110,13 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 			nx = player.x + n * hx;
 			ny = player.y + n * hy; 
 			if (stage[ny * B_WIDHT + nx] != 0) {
+			    	/* rays[i] = (ray) { */
+					/* player.x*BLOCK + BLOCK / 2, */
+					/* player.y*BLOCK + BLOCK / 2, */
+					/* nx*BLOCK + BLOCK / 2, */
+					/* ny*BLOCK + BLOCK /2 */
+				/* }; */
+
 
 				draw_line(
 					pixels,
@@ -122,7 +133,6 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 					player.y*BLOCK + BLOCK / 2,
 					nx*BLOCK + BLOCK / 2,
 					ny*BLOCK + BLOCK /2,
-					0xff00f0,
 					WIDHT / n_lines,
 					i	
 					);			/* stage[ny * B_WIDHT + nx] = 2; */
@@ -145,11 +155,13 @@ int draw_stage(uint32_t* pixels, uint32_t* stage) {
 		for (uint32_t x = 0; x < B_WIDHT; x++) {
 			switch (stage[y*B_WIDHT + x]) {
 				case Empty:
+					/* draw_block(pixels, x, y, 0xffffff, 0xffffff); */
 					break;
 				case Wall:
 					draw_block(pixels, x, y, 0xff0000, 0); 
 					break;
 				case Player:
+					/* draw_block(pixels, x, y, 0xffffff, 0xffffff); */
 					draw_player(pixels, x, y);
 					break;
 				case Foe:
