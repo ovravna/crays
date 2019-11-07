@@ -33,22 +33,41 @@ int create_stage(uint32_t * pixels, uint32_t * stage) { /* if (stage != NULL) re
 }
 void setup(uint32_t * pixels) {
 	player = (player_t) { 
-		.x = B_WIDHT / 2,
-		.y = B_HEIGHT / 2,
+		.x = WIDHT / 2,
+		.y = HEIGHT / 2,
 		.a = 0
 	};
 	create_stage(pixels, stage);
 }
+
+int draw_player2(uint32_t * pixels, player_t player) {
+	uint32_t r = BLOCK / 2;		
+   		
+	int cx, cy;
+	for (size_t yy = player.y - r ; yy < player.y + r; yy++) {
+	    for (size_t xx = player.x - r ; xx < player.x + r; xx++) {
+		cx = player.x - xx;
+		cy = player.y - yy;
+		double d = sqrt(cx*cx + cy*cy);
+		if (d < r) 
+		    pixels[yy * WIDHT + xx] = 0x00ff00;
+	    }
+	}
+	return 0;
+}
+
 void loop(uint32_t * pixels) {
+    	
 	create_stage(pixels, stage);
-	/* double xd = cos(ticks/4000) * B_WIDHT / 5 + B_WIDHT / 2; */
-	/* double yd = sin(ticks/4000) * B_HEIGHT / 5 +  B_HEIGHT / 2; */
+	double xd = cos(ticks/1000) * WIDHT / 3 + WIDHT / 2;
+	double yd = sin(ticks/1000) * HEIGHT / 3 + HEIGHT / 2;
 	player.a += M_PI / 2 * 0.001;
-	/* player.x = (uint32_t) xd; */
-	/* player.y = (uint32_t) yd; */
+	player.x = (uint32_t) xd;
+	player.y = (uint32_t) yd;
 	cast_rays(pixels, player, stage, M_PI/2);
-	stage[player.y * B_WIDHT + player.x] = 2;
+	/* stage[player.y * B_WIDHT + player.x] = 1; */
 	draw_stage(pixels, stage);
+	draw_player2(pixels, player);
 	/* printf("%d %d\n", player.x, player.y); */
 	ticks++;
 }
@@ -95,6 +114,9 @@ int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uin
 	return 0;
 }
 
+int cast_rays2(uint32_t * pixels, player_t player, uint32_t * stage, double fov) {
+
+}
 
 int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) {
     	uint32_t n_lines = 100;
@@ -107,8 +129,8 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 		uint32_t ny; 
 
 		for (uint32_t n = 1 ;; n++) {
-			nx = player.x + n * hx;
-			ny = player.y + n * hy; 
+			nx = player.x / BLOCK + n * hx;
+			ny = player.y / BLOCK + n * hy; 
 			if (stage[ny * B_WIDHT + nx] != 0) {
 			    	/* rays[i] = (ray) { */
 					/* player.x*BLOCK + BLOCK / 2, */
@@ -120,8 +142,8 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 
 				draw_line(
 					pixels,
-					player.x*BLOCK + BLOCK / 2,
-					player.y*BLOCK + BLOCK / 2,
+					player.x,
+					player.y,
 					nx*BLOCK + BLOCK / 2,
 					ny*BLOCK + BLOCK /2,
 					0
@@ -129,8 +151,8 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 
 				casted_line(   // todo: drawing should definetly not happen here...
 					&pixels[WIDHT * HEIGHT],
-					player.x*BLOCK + BLOCK / 2,
-					player.y*BLOCK + BLOCK / 2,
+					player.x,
+					player.y,
 					nx*BLOCK + BLOCK / 2,
 					ny*BLOCK + BLOCK /2,
 					WIDHT / n_lines,

@@ -14,7 +14,7 @@ typedef struct {
 } block_t;
 
 typedef struct {
-	uint32_t x, y; // Position
+	uint32_t x, y; // Position in pixels
 	double a; // View angel
 } player_t;
 
