@@ -9,15 +9,6 @@ player_t player;
 double ticks = 0; 
 enum piece { Empty, Wall, Player, Foe};
 
-typedef struct s {
-	uint32_t x0, y0, x1, y1;
-} ray;
-
-
-
-
-size_t n_rays = 100;
-ray rays[100];
 
 int create_stage(uint32_t * pixels, uint32_t * stage) { /* if (stage != NULL) return 0; */
 	
@@ -91,8 +82,8 @@ void player_movement() {
 }
 
 int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle);
-int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle, ray * result);
-
+int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle, ray ** result);
+/* ray hits[16]; */
 void loop(uint32_t * pixels) {
     	
 	create_stage(pixels, stage);
@@ -102,8 +93,13 @@ void loop(uint32_t * pixels) {
 
 	/* cast_ray2(pixels, player, stage, M_PI_4, &hitPoint); */
 	/* draw_line(pixels, player.x, player.y, hitPoint.x1, hitPoint.y1, 0); */
-	cast_rays(pixels, player, stage, M_PI_2);
+	uint32_t n_lines = 16;
+	ray * hits = malloc(n_lines * sizeof(ray));
 
+	cast_rays(pixels, player, stage, hits, n_lines, M_PI_2);
+
+	free(hits);
+	
 	draw_stage(pixels, stage);
 	draw_player(pixels, player);
 
@@ -127,7 +123,7 @@ int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32
 
 	int h =	  map(dist, 0, WIDHT, HEIGHT, 0);
 	int col = map(dist * dist, 0, WIDHT * WIDHT, 0xff, 0);
-	int bw = to_bw(col);
+	/* int bw = to_bw(col); */
 	/* printf("%f %d %x %x\n",dist, WIDHT, col, bw); */
 	
 	draw_rect_ycenter(pixels, i * w, HEIGHT / 2, w, h, col << 16);
@@ -149,29 +145,30 @@ int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uin
 	return 0;
 }
 
-int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle, ray * result) {
+int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle, ray ** result) {
 
     uint32_t x = player.x,
 	     y = player.y; 
     uint32_t step_size = BLOCK / 4;
+    ray * hit = malloc(sizeof(ray));
     for (;;) {
 
 	if (stage[y / BLOCK * B_WIDHT + x / BLOCK] != 0) {
 	    //hit
-	    /* draw_line(pixels, player.x, player.y, x, y, 0); */
-	    /* hitPoint[0] = x; */
-	    /* hitPoint[1] = y; */
-	    result->x0 = player.x;
-	    result->y0 = player.y;
-	    result->x1 = x;
-	    result->y1 = y;
+	    hit->x0 = player.x;
+	    hit->y0 = player.y;
+	    hit->x1 = x;
+	    hit->y1 = y;
 
+	    *result = hit;
+	    /* free(hit); */
 	    return 1;
 	}
 
 	x += round(step_size * cos(angle));
 	y += round(step_size * sin(angle));
     }
+    /* free(hit); */
     return 0;
 }
 
@@ -220,14 +217,40 @@ int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle)
     
 }
 
-int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) {
-    	uint32_t n_lines = 20;
-	double delta_a = fov / n_lines;
+/* ray hits[16]; */
+int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, ray * hits, uint32_t n_lines, double fov) {
+
+	
+	double delta_a = fov / (n_lines + 1);
 	uint32_t i = 0;
 	for (double angle = player.a - fov/2; angle <= player.a + fov / 2; angle += delta_a, i++)  {
-	    	ray hit;
+	    	ray * hit = NULL;
 	    	cast_ray2(pixels, player, stage, angle, &hit);
-		
+	
+		printf("%d %d %d %d\n", hit->x0, hit->y0,hit->x1,hit->y1 );
+		memcpy(&hits[i], hit, sizeof(ray));
+
+		/* draw_line( */
+		/* 	pixels, */
+		/* 	player.x, */
+		/* 	player.y, */
+		/* 	hit.x1, */
+		/* 	hit.y1, */
+		/* 	0 */
+		/* 	); */
+
+		/* casted_line(   // todo: drawing should definetly not happen here... */
+		/* 	&pixels[WIDHT * HEIGHT], */
+		/* 	player.x, */
+		/* 	player.y, */
+		/* 	hit.x1, */
+		/* 	hit.y1, */
+		/* 	WIDHT / n_lines, */
+		/* 	i */	
+		/* 	);			/1* stage[ny * B_WIDHT + nx] = 2; *1/ */
+		}
+	for (size_t i = 0; i < n_lines; i++) {
+		ray hit = hits[i];
 		draw_line(
 			pixels,
 			player.x,
@@ -246,7 +269,9 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 			WIDHT / n_lines,
 			i	
 			);			/* stage[ny * B_WIDHT + nx] = 2; */
-		}
+		/* free(&hits[i]); */
+	}
+	/* free(hits); */	
 	return 0;
 }
 

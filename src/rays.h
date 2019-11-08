@@ -18,6 +18,10 @@ typedef struct {
 	double a; // View angel
 } player_t;
 
+typedef struct s {
+	uint32_t x0, y0, x1, y1;
+} ray;
+
 void setup(uint32_t * pixels);
 void loop(uint32_t * pixels);
 
@@ -25,5 +29,5 @@ int draw_block(uint32_t * pixels, uint32_t x_block, uint32_t y_block, uint32_t c
 int draw_stage(uint32_t* pixels, uint32_t* stage);
 int draw_player(uint32_t * pixels, player_t player); 
 int create_stage(uint32_t * pixels, uint32_t * stage);
-int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov);
+int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, ray* hits, uint32_t n_lines, double fov);
 #endif
