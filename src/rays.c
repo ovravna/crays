@@ -83,7 +83,7 @@ void player_movement() {
 
 int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle);
 int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle, ray ** result);
-int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t w, uint32_t i);
+int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t w, uint32_t i);
 /* ray hits[16]; */
 void loop(uint32_t * pixels) {
     	
@@ -101,6 +101,11 @@ void loop(uint32_t * pixels) {
 
 	for (size_t i = 0; i < n_lines; i++) {
 		ray hit = hits[i];
+		ray nextHit;
+		if (i != n_lines - 2) 
+			nextHit = hits[i + 1];
+		else 
+		    	nextHit = hit;
 		draw_line(
 			pixels,
 			player.x,
@@ -110,12 +115,14 @@ void loop(uint32_t * pixels) {
 			0
 			);
 
-		casted_line(   // todo: drawing should definetly not happen here...
+		casted_line(  
 			&pixels[WIDHT * HEIGHT],
 			player.x,
 			player.y,
 			hit.x1,
 			hit.y1,
+			nextHit.x1,
+			nextHit.y1,
 			WIDHT / n_lines,
 			i	
 			);			/* stage[ny * B_WIDHT + nx] = 2; */
@@ -132,28 +139,67 @@ void loop(uint32_t * pixels) {
 
 
 int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t col); 
+int draw_trapezoid_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uint32_t h0, uint32_t h1, uint32_t col);
 
-int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t w, uint32_t i) {
-    	/* for (uint32_t yy = 0; yy < HEIGHT; yy++) { */
-	    /* for (uint32_t xx = 0; xx < WIDHT; xx++) { */
-		/* pixels[yy * WIDHT + xx] = 0; // map(yy * WIDHT + xx, 0, HEIGHT * WIDHT, 0, 0xffffff); */
-	    /* } */
-	/* } */
+int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t w, uint32_t i) {
+
 	int32_t dx = x1 - x0,
 		 dy = y1 - y0;
+	int32_t dx2 = x2 - x0,
+		dy2 = y2 - y0;
+
 	//source at https://youtu.be/eOCQfxRQ2pY?t=781
     	double dist = dx * cos(player.a) + dy * sin(player.a);
+    	double dist2 = dx2 * cos(player.a) + dy2 * sin(player.a);
 	/* dist = sqrt(dx * dx + dy * dy); */
 
 	int h =	  map(dist, 0, WIDHT, HEIGHT, 0);
+	int h2 =  map(dist2, 0, WIDHT, HEIGHT, 0);
 	int col = map(dist * dist, 0, WIDHT * WIDHT, 0xff, 0);
 	/* int bw = to_bw(col); */
 	/* printf("%f %d %x %x\n",dist, WIDHT, col, bw); */
-	
-	draw_rect_ycenter(pixels, i * w, HEIGHT / 2, w, h, col << 16);
+
+	/* uint32_t dh = h2 - h >= 0 ? -(h2 - h) : h2 - h; */
+
+	/* draw_rect_ycenter(pixels, i * w, HEIGHT / 2, w, h, col << 16); */
+
+	draw_trapezoid_ycenter(pixels, i * w, HEIGHT / 2, w, h, h2, col << 16);
+
+	/* if (dh == 0 || dh > BLOCK) */
+	/* 	/1* draw_rect_ycenter(pixels, i * w, HEIGHT / 2, w, h, col << 16); *1/ */
+	/*     	draw_trapezoid_ycenter(pixels, i * w, HEIGHT / 2, w, h, h, col << 16); */
+	/* else */ 
+	/*     	draw_trapezoid_ycenter(pixels, i * w, HEIGHT / 2, w, h, h2, col << 16); */
 	
 
 	return 0;
+}
+
+int draw_trapezoid_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uint32_t h0, uint32_t h1, uint32_t col) {
+	
+    	double h02 = h0 / 2;
+	double h12 = h1 / 2;
+	double dh = h12 - h02;
+	double slope = dh / w;
+
+	uint32_t h2;
+
+	/* if (dh == 0) { */
+	/*     return draw_rect_ycenter(pixels, x, y, w, h0, col); */
+	/* } */
+
+	
+
+	for (size_t xx = x ; xx < x + w; xx++) {
+
+	    h2 = h02 + round(slope * (xx - x) );
+
+	    for (size_t yy = y - h2; yy < y + h2; yy++) {
+	    
+		    pixels[yy * WIDHT + xx] = col;
+	    }
+	}
+    
 }
 
 int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint32_t col) {
@@ -173,8 +219,10 @@ int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle
 
     uint32_t x = player.x,
 	     y = player.y; 
-    uint32_t step_size = BLOCK / 4;
+    uint32_t step_size = BLOCK / 2;
     ray * hit = malloc(sizeof(ray));
+    int stepx = round(step_size * cos(angle));
+    int stepy = round(step_size * sin(angle));
     for (;;) {
 
 	if (stage[y / BLOCK * B_WIDHT + x / BLOCK] != 0) {
@@ -189,8 +237,8 @@ int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle
 	    return 1;
 	}
 
-	x += round(step_size * cos(angle));
-	y += round(step_size * sin(angle));
+	x += stepx;
+	y += stepy;
     }
     /* free(hit); */
     return 0;
@@ -241,9 +289,7 @@ int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle)
     
 }
 
-/* ray hits[16]; */
 int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, ray ** rays, uint32_t n_lines, double fov) {
-
 	
 	ray * hits = *rays;
 	double delta_a = fov / (n_lines + 1);
@@ -251,32 +297,8 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, ray ** rays,
 	for (double angle = player.a - fov/2; angle <= player.a + fov / 2; angle += delta_a, i++)  {
 	    	ray * hit = NULL;
 	    	cast_ray2(pixels, player, stage, angle, &hit);
-	
-		printf("%d %d %d %d\n", hit->x0, hit->y0,hit->x1,hit->y1 );
 		memcpy(&hits[i], hit, sizeof(ray));
-
-		free(hit);
-		/* draw_line( */
-		/* 	pixels, */
-		/* 	player.x, */
-		/* 	player.y, */
-		/* 	hit.x1, */
-		/* 	hit.y1, */
-		/* 	0 */
-		/* 	); */
-
-		/* casted_line(   // todo: drawing should definetly not happen here... */
-		/* 	&pixels[WIDHT * HEIGHT], */
-		/* 	player.x, */
-		/* 	player.y, */
-		/* 	hit.x1, */
-		/* 	hit.y1, */
-		/* 	WIDHT / n_lines, */
-		/* 	i */	
-		/* 	);			/1* stage[ny * B_WIDHT + nx] = 2; *1/ */
-		}
-	/* free(hits); */	
-	/* *rays = hits; */
+	}
 	return 0;
 }
 
