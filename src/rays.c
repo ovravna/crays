@@ -2,6 +2,7 @@
 #include "lines.h"
 #include "utils.h" 
 #include "inputs.h" 
+#include "castlines.h" 
 
 uint32_t stage[B_WIDHT * B_HEIGHT];
 player_t player;
@@ -66,8 +67,8 @@ void player_movement() {
 	double turn_lenght = 0.05;
 	double movex, movey;
 	
-	movey = movement_lenght * sin(player.a);
-	movex = movement_lenght * cos(player.a);
+	movey = round(movement_lenght * sin(player.a));
+	movex = round(movement_lenght * cos(player.a));
 
 	switch (key) {
 
@@ -89,27 +90,22 @@ void player_movement() {
 	}
 }
 
+int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle);
+int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle, ray * result);
 void loop(uint32_t * pixels) {
     	
-    	/* int arrow = get_arrow_press(); */
-	/* char c = fgetc(stdin); */
-	/* if ((c != EOF) && (c != '\n')) fflushstdin (); */
-    	/* printf("%c\n", c); */
-	/* printf("%d\n", arrow); */
-    	/* int c = get_keypress(); */ 
-	/* printf("%d\n", c); */
 	create_stage(pixels, stage);
 	player_movement();
-	/* double xd = cos(ticks/1000) * WIDHT / 3 + WIDHT / 2; */
-	/* double yd = sin(ticks/1000) * HEIGHT / 3 + HEIGHT / 2; */
-	/* player.a += M_PI / 2 * 0.001; */
-	/* player.x = (uint32_t) xd; */
-	/* player.y = (uint32_t) yd; */
-	cast_rays(pixels, player, stage, M_PI/2);
-	/* stage[player.y * B_WIDHT + player.x] = 1; */
+
+	ray hitPoint;	
+
+	cast_ray2(pixels, player, stage, M_PI_4, &hitPoint);
+	draw_line(pixels, player.x, player.y, hitPoint.x1, hitPoint.y1, 0);
+	cast_rays(pixels, player, stage, M_PI_2);
+
 	draw_stage(pixels, stage);
 	draw_player(pixels, player);
-	/* printf("%d %d\n", player.x, player.y); */
+
 	ticks++;
 }
 
@@ -126,6 +122,7 @@ int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32
 		 dy = y1 - y0;
 	//source at https://youtu.be/eOCQfxRQ2pY?t=781
     	double dist = dx * cos(player.a) + dy * sin(player.a);
+	/* dist = sqrt(dx * dx + dy * dy); */
 
 	int h =	  map(dist, 0, WIDHT, HEIGHT, 0);
 	int col = map(dist * dist, 0, WIDHT * WIDHT, 0xff, 0);
@@ -151,16 +148,83 @@ int draw_rect_ycenter(uint32_t * pixels, uint32_t x, uint32_t y, uint32_t w, uin
 	return 0;
 }
 
-int cast_rays2(uint32_t * pixels, player_t player, uint32_t * stage, double fov) {
+int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle, ray * result) {
 
+    uint32_t x = player.x,
+	     y = player.y; 
+    uint32_t step_size = BLOCK / 4;
+    for (;;) {
+
+	if (stage[y / BLOCK * B_WIDHT + x / BLOCK] != 0) {
+	    //hit
+	    /* draw_line(pixels, player.x, player.y, x, y, 0); */
+	    /* hitPoint[0] = x; */
+	    /* hitPoint[1] = y; */
+	    result->x0 = player.x;
+	    result->y0 = player.y;
+	    result->x1 = x;
+	    result->y1 = y;
+
+	    return 1;
+	}
+
+	x += round(step_size * cos(angle));
+	y -= round(step_size * sin(angle));
+    }
     return 0;
+}
+
+int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle) {
+	
+    uint32_t x = player.x, 
+	     y = player.y;
+    uint32_t xTile = player.x % BLOCK,
+	     yTile = player.y % BLOCK;
+    
+    // 1st quadrant
+	
+    double tana = tan(angle);
+    /* int32_t dy = -yTile; */
+    /* int32_t dx = -yTile / tana; */
+    double yStep = 1 / tana; // step on x-axis 
+    double xStep = -tana; // step on y-axis 
+
+    int32_t tileStepX = BLOCK;
+    int32_t tileStepY = -BLOCK;
+
+    double yIntercept = player.y + xTile / tana;
+    double xIntercept = player.x + -yTile / tana; 
+    
+    
+    printf("init %d %f %d %f %f\n", player.x, xIntercept, yTile, tana, yTile / tana);
+
+    for (uint32_t ii = 0; ; ii++) {
+	
+	printf("0 %d %f %f\n", ii, xIntercept, xStep);
+
+	if (stage[(int)round(yIntercept / BLOCK) * B_WIDHT + x / BLOCK] != 0) {
+	    draw_line(pixels, player.x, player.y, x, yIntercept, 0);
+	    return 1; // hit vertical
+	}
+	x += tileStepX; 
+	yIntercept += yStep;
+
+	if (stage[y / BLOCK * B_WIDHT + (int)round(xIntercept / BLOCK)] != 0) {
+	    draw_line(pixels, player.x, player.y, xIntercept, y, 0);
+	    return 1; // hit horizontal
+	}
+	y += tileStepY;
+	xIntercept += xStep;
+    }
+    
 }
 
 int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) {
     	uint32_t n_lines = 100;
 	double delta_a = fov / n_lines;
 	uint32_t i = 0;
-	for (double angle = player.a - fov/2; angle <= player.a + fov / 2; angle += delta_a, i++)  {
+	for (double angle = player.a - fov/2; angle < player.a + fov / 2; angle += delta_a, i++)  {
+	    	/* cast_ray2(pixels, player, stage, angle); */
 		double hx = cos(angle); 
 		double hy = sin(angle);
 		uint32_t nx; 
@@ -178,14 +242,14 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 				/* }; */
 
 
-				draw_line(
-					pixels,
-					player.x,
-					player.y,
-					nx*BLOCK + BLOCK / 2,
-					ny*BLOCK + BLOCK /2,
-					0
-					);
+				/* draw_line( */
+				/* 	pixels, */
+				/* 	player.x, */
+				/* 	player.y, */
+				/* 	nx*BLOCK + BLOCK / 2, */
+				/* 	ny*BLOCK + BLOCK /2, */
+				/* 	0 */
+				/* 	); */
 
 				casted_line(   // todo: drawing should definetly not happen here...
 					&pixels[WIDHT * HEIGHT],
@@ -207,7 +271,6 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) 
 	return 0;
 }
 
-/* int cast_ray(); */
 
 
 int draw_stage(uint32_t* pixels, uint32_t* stage) {
