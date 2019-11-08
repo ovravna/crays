@@ -92,6 +92,7 @@ void player_movement() {
 
 int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle);
 int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle, ray * result);
+
 void loop(uint32_t * pixels) {
     	
 	create_stage(pixels, stage);
@@ -99,8 +100,8 @@ void loop(uint32_t * pixels) {
 
 	ray hitPoint;	
 
-	cast_ray2(pixels, player, stage, M_PI_4, &hitPoint);
-	draw_line(pixels, player.x, player.y, hitPoint.x1, hitPoint.y1, 0);
+	/* cast_ray2(pixels, player, stage, M_PI_4, &hitPoint); */
+	/* draw_line(pixels, player.x, player.y, hitPoint.x1, hitPoint.y1, 0); */
 	cast_rays(pixels, player, stage, M_PI_2);
 
 	draw_stage(pixels, stage);
@@ -169,7 +170,7 @@ int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle
 	}
 
 	x += round(step_size * cos(angle));
-	y -= round(step_size * sin(angle));
+	y += round(step_size * sin(angle));
     }
     return 0;
 }
@@ -220,54 +221,32 @@ int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle)
 }
 
 int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, double fov) {
-    	uint32_t n_lines = 100;
+    	uint32_t n_lines = 20;
 	double delta_a = fov / n_lines;
 	uint32_t i = 0;
-	for (double angle = player.a - fov/2; angle < player.a + fov / 2; angle += delta_a, i++)  {
-	    	/* cast_ray2(pixels, player, stage, angle); */
-		double hx = cos(angle); 
-		double hy = sin(angle);
-		uint32_t nx; 
-		uint32_t ny; 
+	for (double angle = player.a - fov/2; angle <= player.a + fov / 2; angle += delta_a, i++)  {
+	    	ray hit;
+	    	cast_ray2(pixels, player, stage, angle, &hit);
+		
+		draw_line(
+			pixels,
+			player.x,
+			player.y,
+			hit.x1,
+			hit.y1,
+			0
+			);
 
-		for (uint32_t n = 1 ;; n++) {
-			nx = player.x / BLOCK + n * hx;
-			ny = player.y / BLOCK + n * hy; 
-			if (stage[ny * B_WIDHT + nx] != 0) {
-			    	/* rays[i] = (ray) { */
-					/* player.x*BLOCK + BLOCK / 2, */
-					/* player.y*BLOCK + BLOCK / 2, */
-					/* nx*BLOCK + BLOCK / 2, */
-					/* ny*BLOCK + BLOCK /2 */
-				/* }; */
-
-
-				/* draw_line( */
-				/* 	pixels, */
-				/* 	player.x, */
-				/* 	player.y, */
-				/* 	nx*BLOCK + BLOCK / 2, */
-				/* 	ny*BLOCK + BLOCK /2, */
-				/* 	0 */
-				/* 	); */
-
-				casted_line(   // todo: drawing should definetly not happen here...
-					&pixels[WIDHT * HEIGHT],
-					player.x,
-					player.y,
-					nx*BLOCK + BLOCK / 2,
-					ny*BLOCK + BLOCK /2,
-					WIDHT / n_lines,
-					i	
-					);			/* stage[ny * B_WIDHT + nx] = 2; */
-				break;
-			}
-			if (ny >= B_HEIGHT || nx >= B_WIDHT || ny == 0 || nx == 0) {
-				printf("Hit wall: %d %d\n", nx, ny);
-				break;
-			}
+		casted_line(   // todo: drawing should definetly not happen here...
+			&pixels[WIDHT * HEIGHT],
+			player.x,
+			player.y,
+			hit.x1,
+			hit.y1,
+			WIDHT / n_lines,
+			i	
+			);			/* stage[ny * B_WIDHT + nx] = 2; */
 		}
-	}
 	return 0;
 }
 
