@@ -83,6 +83,7 @@ void player_movement() {
 
 int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle);
 int cast_ray2(uint32_t * pixels, player_t player, uint32_t * stage, double angle, ray ** result);
+int casted_line(uint32_t * pixels, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t w, uint32_t i);
 /* ray hits[16]; */
 void loop(uint32_t * pixels) {
     	
@@ -96,7 +97,30 @@ void loop(uint32_t * pixels) {
 	uint32_t n_lines = 16;
 	ray * hits = malloc(n_lines * sizeof(ray));
 
-	cast_rays(pixels, player, stage, hits, n_lines, M_PI_2);
+	cast_rays(pixels, player, stage, &hits, n_lines, M_PI_2);
+
+	for (size_t i = 0; i < n_lines; i++) {
+		ray hit = hits[i];
+		draw_line(
+			pixels,
+			player.x,
+			player.y,
+			hit.x1,
+			hit.y1,
+			0
+			);
+
+		casted_line(   // todo: drawing should definetly not happen here...
+			&pixels[WIDHT * HEIGHT],
+			player.x,
+			player.y,
+			hit.x1,
+			hit.y1,
+			WIDHT / n_lines,
+			i	
+			);			/* stage[ny * B_WIDHT + nx] = 2; */
+		/* free(&hits[i]); */
+	}
 
 	free(hits);
 	
@@ -218,9 +242,10 @@ int cast_ray(uint32_t * pixels, player_t player, uint32_t * stage, double angle)
 }
 
 /* ray hits[16]; */
-int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, ray * hits, uint32_t n_lines, double fov) {
+int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, ray ** rays, uint32_t n_lines, double fov) {
 
 	
+	ray * hits = *rays;
 	double delta_a = fov / (n_lines + 1);
 	uint32_t i = 0;
 	for (double angle = player.a - fov/2; angle <= player.a + fov / 2; angle += delta_a, i++)  {
@@ -230,6 +255,7 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, ray * hits, 
 		printf("%d %d %d %d\n", hit->x0, hit->y0,hit->x1,hit->y1 );
 		memcpy(&hits[i], hit, sizeof(ray));
 
+		free(hit);
 		/* draw_line( */
 		/* 	pixels, */
 		/* 	player.x, */
@@ -249,29 +275,8 @@ int cast_rays(uint32_t * pixels, player_t player, uint32_t * stage, ray * hits, 
 		/* 	i */	
 		/* 	);			/1* stage[ny * B_WIDHT + nx] = 2; *1/ */
 		}
-	for (size_t i = 0; i < n_lines; i++) {
-		ray hit = hits[i];
-		draw_line(
-			pixels,
-			player.x,
-			player.y,
-			hit.x1,
-			hit.y1,
-			0
-			);
-
-		casted_line(   // todo: drawing should definetly not happen here...
-			&pixels[WIDHT * HEIGHT],
-			player.x,
-			player.y,
-			hit.x1,
-			hit.y1,
-			WIDHT / n_lines,
-			i	
-			);			/* stage[ny * B_WIDHT + nx] = 2; */
-		/* free(&hits[i]); */
-	}
 	/* free(hits); */	
+	/* *rays = hits; */
 	return 0;
 }
 
