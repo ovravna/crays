@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <SDL2/SDL_keycode.h>
 #include "inputs.h"
+#include "textures.h"
 
 #define mapWidth 24
 #define mapHeight 24
@@ -41,7 +42,7 @@ vec pos, dir, plane;
 
 double posX = 22, posY = 12, dirX = -1, dirY = 0, planeX = 0, planeY = 0.66;
 
-void draw_line(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t col) {
+void draw_vertline(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t col) {
 
     if (h > HEIGHT) h = HEIGHT;
     uint32_t h2 = h / 2;
@@ -49,6 +50,17 @@ void draw_line(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t col) {
 
     for (uint32_t y = H2 - h2; y < H2 + h2; y++) {
 	pixels[y * WIDHT + x] = col;
+    }
+}
+void draw_vertline_tex(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t * texture, uint32_t tex_n) {
+
+    if (h > HEIGHT) h = HEIGHT;
+    uint32_t h2 = h / 2;
+    uint32_t H2 = HEIGHT / 2;
+
+    for (uint32_t y = H2 - h2, i = 0; y < H2 + h2; y++, i++) {
+	uint32_t off = (tex_n) * i / h;
+	pixels[y * WIDHT + x] = texture[tex_n - off];
     }
 }
 
@@ -169,7 +181,12 @@ void loop(uint32_t * pixels) {
 	     /* printf("%d\n", d); */ 
 	     /* int lineHeight = mapping(d, 0, HEIGHT, HEIGHT - 10, 0); */ 
 
-	      draw_line(&pixels[WIDHT * HEIGHT], x, lineHeight, col);
+
+	      uint32_t n = 64;
+
+	      uint32_t index =  side ? sideDistY / 1.0 * n  : sideDistX / 1.0 * n;
+
+	      draw_vertline_tex(&pixels[WIDHT * HEIGHT], x, lineHeight, dog[index], n);
 
 
 	}

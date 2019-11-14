@@ -35,7 +35,6 @@ int main(int argc, char** argv) {
 				quit = true;
 				break;
 			case SDL_KEYDOWN:
-				/* keysDown(event.key.keysym.sym); */
 				switch (event.key.keysym.sym) {
 				    case SDLK_UP: 
 					keypress(Up);
