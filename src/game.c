@@ -52,21 +52,16 @@ void draw_vertline(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t col) {
 	pixels[y * WIDHT + x] = col;
     }
 }
-void draw_vertline_tex(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t * texture, uint32_t tex_w, uint32_t index) {
+void draw_vertline_tex(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t * texture, uint32_t tex_h, uint32_t index) {
 
     if (h > HEIGHT) h = HEIGHT;
     uint32_t h2 = h / 2;
     uint32_t H2 = HEIGHT / 2;
 
     for (uint32_t y = H2 - h2, i = 0; y < H2 + h2; y++, i++) {
-	uint32_t off = (tex_w) * i / h;
-	pixels[y * WIDHT + x] = texture[off * tex_w + index];
+	uint32_t off = (64 - tex_h) / 2 +  (tex_h) * i / h;
+	pixels[y * WIDHT + x] = texture[off * 64 + index];
     }
-}
-
-long mapping(long value, long input_start, long input_end, long output_start, long output_end) {
-    double slope = 1.0 * (output_end - output_start) / (input_end - input_start);  
-    return  output_start + slope * (value - input_start);
 }
 
 void setup(uint32_t * pixels) {
@@ -154,7 +149,6 @@ void loop(uint32_t * pixels) {
 	      else           perpWallDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
 
 	      //Calculate height of line to draw on screen
-	      int lineHeight = HEIGHT / perpWallDist;
 
 	      uint32_t col = 0xff;
 
@@ -179,6 +173,8 @@ void loop(uint32_t * pixels) {
 	      if (side) col &= 0x7f7f7f;
 	
 
+	      int lineHeight = HEIGHT / perpWallDist;
+
 	
 	     /* uint32_t d = (uint32_t) dist; */
 	     /* printf("%d\n", d); */ 
@@ -187,7 +183,11 @@ void loop(uint32_t * pixels) {
 
 	      uint32_t n = 64;
 
+	      if (stage[mapX][mapY] < 3) {
+		  draw_vertline(&pixels[WIDHT * HEIGHT], x, lineHeight, col);
 
+	      }
+	      else {
 	      //calculate value of wallX
 	      double wallX; //where exactly the wall was hit
 	      if (side == 0) wallX = posY + perpWallDist * rayDirY;
@@ -198,9 +198,12 @@ void loop(uint32_t * pixels) {
 
 	      if(side == 0 && rayDirX > 0) index = n - index - 1;
 	      if(side == 1 && rayDirY < 0) index = n - index - 1;
-	      /* idx++; */
-	      /* idx %= n; */
+	      
+	      if (perpWallDist < 1) n *= perpWallDist;
 	      draw_vertline_tex(&pixels[WIDHT * HEIGHT], x, lineHeight, *dog, n, index);
+	      }
+		  
+
 
 
 	}
