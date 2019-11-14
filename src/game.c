@@ -52,15 +52,15 @@ void draw_vertline(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t col) {
 	pixels[y * WIDHT + x] = col;
     }
 }
-void draw_vertline_tex(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t * texture, uint32_t tex_n) {
+void draw_vertline_tex(uint32_t * pixels, uint32_t x, uint32_t h, uint32_t * texture, uint32_t tex_w, uint32_t index) {
 
     if (h > HEIGHT) h = HEIGHT;
     uint32_t h2 = h / 2;
     uint32_t H2 = HEIGHT / 2;
 
     for (uint32_t y = H2 - h2, i = 0; y < H2 + h2; y++, i++) {
-	uint32_t off = (tex_n) * i / h;
-	pixels[y * WIDHT + x] = texture[tex_n - off];
+	uint32_t off = (tex_w) * i / h;
+	pixels[y * WIDHT + x] = texture[off * tex_w + index];
     }
 }
 
@@ -78,7 +78,7 @@ void setup(uint32_t * pixels) {
 }
 
 void inputHandler();
-
+uint32_t idx = 0;
 void loop(uint32_t * pixels) {
 
 	for (uint32_t x = 0; x < WIDHT; x++) {
@@ -89,6 +89,9 @@ void loop(uint32_t * pixels) {
 	      //which box of the map we're in
 	      int mapX = ( int )(posX);
 	      int mapY = ( int )(posY);
+
+	      double offX = posX - mapX;
+	      double offY = posY - mapY;
 
 	      //length of ray from current position to next x or y-side
 	      double sideDistX;
@@ -184,9 +187,20 @@ void loop(uint32_t * pixels) {
 
 	      uint32_t n = 64;
 
-	      uint32_t index =  side ? sideDistY / 1.0 * n  : sideDistX / 1.0 * n;
 
-	      draw_vertline_tex(&pixels[WIDHT * HEIGHT], x, lineHeight, dog[index], n);
+	      //calculate value of wallX
+	      double wallX; //where exactly the wall was hit
+	      if (side == 0) wallX = posY + perpWallDist * rayDirY;
+	      else           wallX = posX + perpWallDist * rayDirX;
+	      wallX -= floor((wallX));
+
+	      uint32_t index =  (wallX * n);
+
+	      if(side == 0 && rayDirX > 0) index = n - index - 1;
+	      if(side == 1 && rayDirY < 0) index = n - index - 1;
+	      /* idx++; */
+	      /* idx %= n; */
+	      draw_vertline_tex(&pixels[WIDHT * HEIGHT], x, lineHeight, *dog, n, index);
 
 
 	}

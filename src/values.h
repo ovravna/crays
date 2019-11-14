@@ -4,7 +4,7 @@
 #define BLOCK 16
 
 #define B_WIDHT 32
-#define B_HEIGHT 16
+#define B_HEIGHT 32
 
 #define WIDHT BLOCK * B_WIDHT
 #define HEIGHT BLOCK * B_HEIGHT
