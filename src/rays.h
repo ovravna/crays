@@ -20,7 +20,10 @@ typedef struct {
 
 typedef struct s {
 	uint32_t x0, y0, x1, y1;
+	uint32_t height;
 } ray;
+
+uint32_t to_height(uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, double angle);
 
 void setup(uint32_t * pixels);
 void loop(uint32_t * pixels);

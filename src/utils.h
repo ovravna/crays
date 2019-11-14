@@ -12,6 +12,10 @@ long map(long value, long input_start, long input_end, long output_start, long o
     return  output_start + slope * (value - input_start);
 }
 
+int iround(double value) {
+    return (int) round(value);
+}
+
 uint32_t to_bw(uint32_t col) {
 	uint32_t avg;
     	if (col <= 0xff) {

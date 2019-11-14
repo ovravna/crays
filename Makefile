@@ -123,6 +123,33 @@ crays/fast:
 	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/build
 .PHONY : crays/fast
 
+src/game.o: src/game.c.o
+
+.PHONY : src/game.o
+
+# target to build an object file
+src/game.c.o:
+	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/game.c.o
+.PHONY : src/game.c.o
+
+src/game.i: src/game.c.i
+
+.PHONY : src/game.i
+
+# target to preprocess a source file
+src/game.c.i:
+	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/game.c.i
+.PHONY : src/game.c.i
+
+src/game.s: src/game.c.s
+
+.PHONY : src/game.s
+
+# target to generate assembly for a file
+src/game.c.s:
+	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/game.c.s
+.PHONY : src/game.c.s
+
 src/inputs.o: src/inputs.c.o
 
 .PHONY : src/inputs.o
@@ -149,33 +176,6 @@ src/inputs.s: src/inputs.c.s
 src/inputs.c.s:
 	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/inputs.c.s
 .PHONY : src/inputs.c.s
-
-src/lines.o: src/lines.c.o
-
-.PHONY : src/lines.o
-
-# target to build an object file
-src/lines.c.o:
-	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/lines.c.o
-.PHONY : src/lines.c.o
-
-src/lines.i: src/lines.c.i
-
-.PHONY : src/lines.i
-
-# target to preprocess a source file
-src/lines.c.i:
-	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/lines.c.i
-.PHONY : src/lines.c.i
-
-src/lines.s: src/lines.c.s
-
-.PHONY : src/lines.s
-
-# target to generate assembly for a file
-src/lines.c.s:
-	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/lines.c.s
-.PHONY : src/lines.c.s
 
 src/main.o: src/main.c.o
 
@@ -204,33 +204,6 @@ src/main.c.s:
 	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/main.c.s
 .PHONY : src/main.c.s
 
-src/rays.o: src/rays.c.o
-
-.PHONY : src/rays.o
-
-# target to build an object file
-src/rays.c.o:
-	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/rays.c.o
-.PHONY : src/rays.c.o
-
-src/rays.i: src/rays.c.i
-
-.PHONY : src/rays.i
-
-# target to preprocess a source file
-src/rays.c.i:
-	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/rays.c.i
-.PHONY : src/rays.c.i
-
-src/rays.s: src/rays.c.s
-
-.PHONY : src/rays.s
-
-# target to generate assembly for a file
-src/rays.c.s:
-	$(MAKE) -f CMakeFiles/crays.dir/build.make CMakeFiles/crays.dir/src/rays.c.s
-.PHONY : src/rays.c.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -240,18 +213,15 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... crays"
 	@echo "... edit_cache"
+	@echo "... src/game.o"
+	@echo "... src/game.i"
+	@echo "... src/game.s"
 	@echo "... src/inputs.o"
 	@echo "... src/inputs.i"
 	@echo "... src/inputs.s"
-	@echo "... src/lines.o"
-	@echo "... src/lines.i"
-	@echo "... src/lines.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
-	@echo "... src/rays.o"
-	@echo "... src/rays.i"
-	@echo "... src/rays.s"
 .PHONY : help
 
 

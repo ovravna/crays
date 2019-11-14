@@ -2,12 +2,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "SDL2/SDL.h"
-#include "rays.h"
+#include "game.h"
 #include "inputs.h"
 
 int main(int argc, char** argv) {
 	
-	bool leftMouseButtonDown = false;
 	bool quit = 0;
 	SDL_Event event;
 	uint32_t screen_size = SCREEN_SIZE * sizeof(uint32_t);
@@ -36,7 +35,7 @@ int main(int argc, char** argv) {
 				quit = true;
 				break;
 			case SDL_KEYDOWN:
-				/* printf("%d\n", event.key.keysym.sym); */
+				/* keysDown(event.key.keysym.sym); */
 				switch (event.key.keysym.sym) {
 				    case SDLK_UP: 
 					keypress(Up);
@@ -50,8 +49,24 @@ int main(int argc, char** argv) {
 				    case SDLK_LEFT: 
 					keypress(Left);
 					break;
-				break;
 				}
+				break;
+			case SDL_KEYUP:
+				switch (event.key.keysym.sym) {
+				    case SDLK_UP: 
+					keyup(Up);
+					break;
+				    case SDLK_DOWN: 
+					keyup(Down);
+					break;
+				    case SDLK_RIGHT: 
+					keyup(Right);
+					break;
+				    case SDLK_LEFT: 
+					keyup(Left);
+					break;
+				}
+				break;
 
 		}
 		SDL_RenderClear(renderer);

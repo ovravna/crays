@@ -12,8 +12,8 @@ include_directories( ${SDL2_INCLUDE_DIRS} )
 add_executable(
 	crays
 	src/main.c
-	src/rays.c
-	src/lines.c
+	src/game.c
+	# src/drawline.c
 	src/inputs.c
 )
 set_property(TARGET crays PROPERTY C_STANDARD 99)

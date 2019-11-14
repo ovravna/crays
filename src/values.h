@@ -1,9 +1,9 @@
 #ifndef VALUES_H
 #define VALUES_H
 
-#define BLOCK 20
+#define BLOCK 16
 
-#define B_WIDHT 16
+#define B_WIDHT 32
 #define B_HEIGHT 16
 
 #define WIDHT BLOCK * B_WIDHT
